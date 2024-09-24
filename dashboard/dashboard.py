@@ -7,19 +7,14 @@ import folium
 import geopandas as gpd
 import streamlit.components.v1 as components
 
-
-# Load datasets
 df_day = pd.read_csv('datasets/day.csv')
 df_hour = pd.read_csv('datasets/hour.csv')
 
-# Convert date columns
 df_day['dteday'] = pd.to_datetime(df_day['dteday'])
 df_hour['dteday'] = pd.to_datetime(df_hour['dteday'])
 
-# Streamlit dashboard title
 st.title('Bike Sharing Dashboard')
 
-# Sidebar data option selection
 data_option = st.sidebar.selectbox('Pilih Data', ['Daily', 'Hourly', 'RFM Analysis', 'Geospatial Analysis'])
 
 if data_option == 'Daily':
@@ -62,21 +57,18 @@ elif data_option == 'Hourly':
 elif data_option == 'RFM Analysis':
     st.header('RFM Analysis')
 
-    # Assuming you have a user ID column and the cnt represents rentals
     df_rfm = df_hour.copy()
-    df_rfm['user_id'] = ...  # Add your user ID logic here
+    df_rfm['user_id'] = ...  
 
-    # Calculate Recency, Frequency, and Monetary
     current_date = df_rfm['dteday'].max()
     rfm_df = df_rfm.groupby('user_id').agg({
-        'dteday': lambda x: (current_date - x.max()).days,  # Recency
-        'cnt': ['count', 'sum']  # Frequency and Monetary
+        'dteday': lambda x: (current_date - x.max()).days,  
+        'cnt': ['count', 'sum'] 
     }).reset_index()
     
     rfm_df.columns = ['user_id', 'Recency', 'Frequency', 'Monetary']
     st.dataframe(rfm_df)
 
-    # Display RFM distribution
     fig, ax = plt.subplots()
     sns.histplot(rfm_df['Recency'], bins=30, ax=ax)
     plt.title('Distribution of Recency')
@@ -85,16 +77,13 @@ elif data_option == 'RFM Analysis':
 elif data_option == 'Geospatial Analysis':
     st.header('Geospatial Analysis')
 
-    # Cek kolom yang ada
     st.write("Kolom yang ada di df_hour:", df_hour.columns)
 
-    # Pastikan kolom lat dan lon ada
     if 'lat' in df_hour.columns and 'lon' in df_hour.columns:
-        # Membuat GeoDataFrame
+
         geometry = gpd.points_from_xy(df_hour.lon, df_hour.lat)
         geo_df = gpd.GeoDataFrame(df_hour, geometry=geometry)
 
-        # Membuat peta
         m = folium.Map(location=[geo_df.lat.mean(), geo_df.lon.mean()], zoom_start=12)
 
         for idx, row in geo_df.iterrows():
@@ -108,10 +97,8 @@ elif data_option == 'Geospatial Analysis':
                 popup=f"Peminjaman: {row['cnt']}"
             ).add_to(m)
 
-        # Simpan peta ke file HTML
         m.save('bike_sharing_map.html')
 
-        # Membaca file HTML dan menampilkannya di Streamlit
         HtmlFile = open('bike_sharing_map.html', 'r', encoding='utf-8')
         source_code = HtmlFile.read() 
         components.html(source_code, height=600)
