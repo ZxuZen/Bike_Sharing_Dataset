@@ -3,9 +3,6 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import datetime
-import folium
-import geopandas as gpd
-import streamlit.components.v1 as components
 
 df_day = pd.read_csv('datasets/day.csv')
 df_hour = pd.read_csv('datasets/hour.csv')
@@ -15,7 +12,7 @@ df_hour['dteday'] = pd.to_datetime(df_hour['dteday'])
 
 st.title('Bike Sharing Dashboard')
 
-data_option = st.sidebar.selectbox('Pilih Data', ['Daily', 'Hourly', 'RFM Analysis', 'Geospatial Analysis'])
+data_option = st.sidebar.selectbox('Pilih Data', ['Daily', 'Hourly', 'RFM Analysis'])
 
 if data_option == 'Daily':
     st.header('Daily Bike Sharing Data')
@@ -73,37 +70,6 @@ elif data_option == 'RFM Analysis':
     sns.histplot(rfm_df['Recency'], bins=30, ax=ax)
     plt.title('Distribution of Recency')
     st.pyplot(fig)
-
-elif data_option == 'Geospatial Analysis':
-    st.header('Geospatial Analysis')
-
-    st.write("Kolom yang ada di df_hour:", df_hour.columns)
-
-    if 'lat' in df_hour.columns and 'lon' in df_hour.columns:
-
-        geometry = gpd.points_from_xy(df_hour.lon, df_hour.lat)
-        geo_df = gpd.GeoDataFrame(df_hour, geometry=geometry)
-
-        m = folium.Map(location=[geo_df.lat.mean(), geo_df.lon.mean()], zoom_start=12)
-
-        for idx, row in geo_df.iterrows():
-            folium.CircleMarker(
-                location=(row['lat'], row['lon']),
-                radius=row['cnt'] / 100,
-                color='blue',
-                fill=True,
-                fill_color='blue',
-                fill_opacity=0.6,
-                popup=f"Peminjaman: {row['cnt']}"
-            ).add_to(m)
-
-        m.save('bike_sharing_map.html')
-
-        HtmlFile = open('bike_sharing_map.html', 'r', encoding='utf-8')
-        source_code = HtmlFile.read() 
-        components.html(source_code, height=600)
-    else:
-        st.error("Kolom 'lat' dan 'lon' tidak ditemukan dalam dataset.")
 
 st.sidebar.markdown('**Informasi Tambahan**')
 st.sidebar.markdown('- Dashboard ini menampilkan data peminjaman sepeda harian dan per jam.')
